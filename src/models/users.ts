@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 import { User } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
