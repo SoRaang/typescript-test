@@ -1,8 +1,14 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+import connectDB from './database';
 import { User, Product } from './types';
-import dataBase from './database';
+import UserModel from './models/users';
+
+// --- Settings
 
 const app = express();
 const PORT = 8001;
@@ -17,13 +23,9 @@ app.use(bodyParser.json());
 app.use(cors(corsOptions));
 app.use(router);
 
-// --- Utils
+connectDB();
 
-const randID = () => {
-    return Math.floor(Math.random() * 1000);
-}
-
-// ---
+// --- Views
 
 app.get('/', (req, res) => {
     res.send('Hello, World!');
@@ -31,57 +33,68 @@ app.get('/', (req, res) => {
 
 // --- RestAPI
 
-router.get('/api/v1/users', (req, res) => {
-    res.send(dataBase.user);
-});
+router.get('/api/v1/users', async (req, res) => { // 전체 사용자 데이터 조회
+    try {
+        const users = await UserModel.find();
 
-router.get('/api/v1/users/:id', (req, res) => {
-    const user = dataBase.user.find(user => user.id === parseInt(req.params.id));
-
-    if (typeof user === 'undefined') {
-        res.sendStatus(404);
-    } else {
-        res.send(user);
+        res.json(users);
+    } catch(error) {
+        console.error('사용자 정보 조회 실패 : ', error);
+        res.status(500).json({ error: '조회 중 오류가 발생하였습니다.' });
     }
 });
 
-router.post('/api/v1/users', (req, res) => {
-    const user: User = req.body;
+router.get('/api/v1/users/:id', async (req, res) => { // 특정 사용자 조회
+    try {
+        const user = await UserModel.findOne({ id: req.params.id });
 
-    dataBase.user.push({
-        id: randID(),
+        res.json(user);
+    } catch(error) {
+        console.error('사용자 정보 조회 실패 : ', error);
+        res.status(500).json({ error: '조회 중 오류가 발생하였습니다.' });
+    }
+});
+
+router.post('/api/v1/users', async (req, res) => { // 사용자 생성
+    const user: Omit <User, 'id'> = req.body;
+    const newUser = new UserModel({
+        id: uuidv4(),
         name: user.name,
         address: user.address,
         email: user.email,
         description: user.description
     });
 
-    res.sendStatus(200);
-});
+    try {
+        const savedUser = await newUser.save();
 
-router.put('/api/v1/users/:id', (req, res) => {
-    const idx = dataBase.user.findIndex(user => user.id === parseInt(req.params.id));
-
-    if (idx !== -1) {
-        const input = req.body;
-        const prev = dataBase.user[idx];
-        const user = {
-            id: prev.id,
-            name: input.name,
-            address: input.address,
-            email: input.email,
-            description: input.description
-        }
-
-        dataBase.user[idx] = user;
-        res.sendStatus(200);
+        res.status(201).json(savedUser);
+    } catch(error) {
+        console.error('사용자 정보 입력 실패 : ', error);
+        res.status(500).json({ error: '저장 중 오류가 발생하였습니다.' });
     }
 });
 
-router.delete('/api/v1/users/:id', (req, res) => {
-    dataBase.user = dataBase.user.filter(user => user.id !== parseInt(req.params.id));
+router.put('/api/v1/users/:id', async (req, res) => { // 사용자 정보 수정
+    try {
+        const user = await UserModel.findOneAndUpdate({ id: req.params.id, new: true }, req.body);
 
-    res.sendStatus(200);
+        res.json(user);
+    } catch(error) {
+        console.error('사용자 정보 수정 실패 : ', error);
+        res.status(500).json({ error: '저장 중 오류가 발생하였습니다.' });
+    }
+});
+
+router.delete('/api/v1/users/:id', async (req, res) => { // 사용자 삭제
+    try {
+        const result = await UserModel.findOneAndDelete({ id: req.params.id });
+
+        res.status(200).json({ message: '사용자 정보가 제거되었습니다.' });
+    } catch(error) {
+        console.error('사용자 정보 제거 실패 : ', error);
+        res.status(500).json({ error: '삭제 중 오류가 발생하였습니다.' });
+    }
 });
 
 // --- Server Start
