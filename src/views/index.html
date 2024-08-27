@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>회원가입</title>
+
+        <link rel="stylesheet" href="/styles/main.css">
+    </head>
+
+    <body>
+        <div id="wrap">
+            <form id="frmUser" method="POST" action="/api/v1/users">
+                <h1>회원 등록</h1>
+
+                <div class="input-container">
+                    <p>* 표시는 필수 입력 사항입니다.</p>
+
+                    <div class="input-field">
+                        <label for="txtName">이름 *</label>
+                        <input type="text" name="name" id="txtName" placeholder="사용자명" required>
+                    </div>
+
+                    <div class="input-field">
+                        <label for="txtAddr">주소 *</label>
+                        <input type="text" name="address" id="txtAddr" placeholder="주소" required>
+                    </div>
+
+                    <div class="input-field">
+                        <label for="txtMail">e-mail *</label>
+                        <input type="email" name="email" id="txtMail" placeholder="e-mail" required>
+                    </div>
+
+                    <div class="input-field">
+                        <label for="txtDesc">소개</label>
+                        <input type="text" name="description" id="txtDesc" placeholder="소개">
+                    </div>
+
+                    <p id="labelDone">정상적으로 등록되었습니다.</p>
+
+                    <button type="submit" id="btnSubmit">등록</button>
+                </div>
+            </form>
+        </div>
+    </body>
+
+    <script type="text/javascript" src="/main.js"></script>
+</html>
